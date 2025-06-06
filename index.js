@@ -26,6 +26,7 @@ app.get('/', async (req, res) => {
 
   return {
   summary: event.summary,
+  reservation_id: event.reservation_id
   start: event.start,
   end: event.end,
   uid: event.uid,

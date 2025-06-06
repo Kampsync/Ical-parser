@@ -21,7 +21,7 @@ app.get('/', async (req, res) => {
   const rvshareMatch = description.match(/reservations\/(\d+)/);
   if (rvshareMatch) {
     reservation_id = rvshareMatch[1];
-    uid = rvshareMatch[1]; // optionally use it as UID if needed
+    uid = rvshareMatch[1]; // optional override
   }
 
   return {

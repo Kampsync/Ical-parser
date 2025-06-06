@@ -13,7 +13,7 @@ app.get('/', async (req, res) => {
     const events = Object.values(data).filter(e => e.type === 'VEVENT');
 
    const parsed = events.map(event => {
-  let reservation_id = '';
+  let reservation_id = event.reservation_id ||'';
   let uid = event.uid || '';
   let description = event.description || '';
 

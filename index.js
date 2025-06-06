@@ -12,14 +12,28 @@ app.get('/', async (req, res) => {
     const data = await ical.async.fromURL(url);
     const events = Object.values(data).filter(e => e.type === 'VEVENT');
 
-    const parsed = events.map(event => ({
-      summary: event.summary,
-      start: event.start,
-      end: event.end,
-      uid: event.uid,
-      location: event.location || '',
-      description: event.description || ''
-    }));
+   const parsed = events.map(event => {
+  let reservation_id = '';
+  let uid = event.uid || '';
+  let description = event.description || '';
+
+  // Try to extract RVshare reservation ID from the description
+  const rvshareMatch = description.match(/reservations\/(\d+)\?booking=([a-zA-Z0-9]+)/);
+  if (rvshareMatch) {
+    reservation_id = rvshareMatch[1];
+    uid = rvshareMatch[2];
+  }
+
+  return {
+    summary: event.summary,
+    start: event.start,
+    end: event.end,
+    uid,
+    reservation_id,
+    location: event.location || '',
+    description
+  };
+});
 
     res.json(parsed);
   } catch (err) {

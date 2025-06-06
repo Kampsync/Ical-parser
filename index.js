@@ -17,23 +17,24 @@ app.get('/', async (req, res) => {
   let uid = event.uid || '';
   let description = event.description || '';
 
-  // Try to extract RVshare reservation ID from the description
-  const rvshareMatch = description.match(/reservations\/(\d+)\?booking=([a-zA-Z0-9]+)/);
+  // Try to extract RVshare reservation ID from description
+  const rvshareMatch = description.match(/reservations\/(\d+)/);
   if (rvshareMatch) {
     reservation_id = rvshareMatch[1];
-    uid = rvshareMatch[2];
+    uid = rvshareMatch[1]; // optionally use it as UID if needed
   }
 
   return {
-  summary: event.summary,
-  reservation_id: event.reservation_id,
-  start: event.start,
-  end: event.end,
-  uid: event.uid,
-  location: event.location || '',
-  description: event.description || ''
+    summary: event.summary,
+    reservation_id,
+    start: event.start,
+    end: event.end,
+    uid,
+    location: event.location || '',
+    description
   };
 });
+
 
     res.json(parsed);
   } catch (err) {

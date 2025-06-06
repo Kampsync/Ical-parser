@@ -25,13 +25,12 @@ app.get('/', async (req, res) => {
   }
 
   return {
-    summary: event.summary,
-    start: event.start,
-    end: event.end,
-    uid,
-    reservation_id,
-    location: event.location || '',
-    description
+  summary: event.summary,
+  start: event.start,
+  end: event.end,
+  uid: event.uid,
+  location: event.location || '',
+  description: event.description || ''
   };
 });
 

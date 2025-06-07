@@ -12,10 +12,11 @@ app.get('/', async (req, res) => {
     const data = await ical.async.fromURL(url);
     const events = Object.values(data).filter(e => e.type === 'VEVENT');
 
-   const parsed = events.map(event => {
-  let reservation_id = event.reservation_id ||'';
-  let uid = event.uid || '';
-  let description = event.description || '';
+   const parsed = events
+  .filter(event => {
+    const isRvshare = url.includes('rvshare');
+    const isCustomBlock = event.summary?.toLowerCase().includes('custom event');
+    return !(isRvshare && isCustomBlock);
 
   // Try to extract RVshare reservation ID from description
   const rvshareMatch = description.match(/reservations\/(\d+)/);

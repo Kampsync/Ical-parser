@@ -17,11 +17,14 @@ app.get('/', async (req, res) => {
   const summary = event.summary?.toLowerCase() || '';
   const platform = url.toLowerCase();
 
-  const eventStart = new Date(event.start);
-  const currentYear = new Date().getFullYear();
-  const eventYear = eventStart.getFullYear();
+  // Convert event.start safely to a Date
+  const eventStartDate = new Date(event.start);
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const eventYear = eventStartDate.getFullYear();
 
-  const isPastYear = eventYear < currentYear;
+  // Skip events from before the current year
+  const isOldYear = isNaN(eventStartDate) || eventYear < currentYear;
 
 
   const blockedKeywords = ['custom event', 'blocked', 'not available', 'unavailable', 'blockout', 'calendar block', 'hold'];
@@ -36,7 +39,7 @@ app.get('/', async (req, res) => {
     (platform.includes('camplify') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
     (platform.includes('yescapa') && blockedKeywords.some(keyword => summary.includes(keyword)));
 
-  return !(isCustomBlock || isBlocked);
+  return !isCustomBlock && !isBlocked && !isOldYear;
   })
      
   .map(event => {

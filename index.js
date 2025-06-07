@@ -17,6 +17,13 @@ app.get('/', async (req, res) => {
   const summary = event.summary?.toLowerCase() || '';
   const platform = url.toLowerCase();
 
+  const eventStart = new Date(event.start);
+  const currentYear = new Date().getFullYear();
+  const eventYear = eventStart.getFullYear();
+
+  const isPastYear = eventYear < currentYear;
+
+
   const blockedKeywords = ['custom event', 'blocked', 'not available', 'unavailable', 'blockout', 'calendar block', 'hold'];
 
   const isCustomBlock = blockedKeywords.some(keyword => summary.includes(keyword));

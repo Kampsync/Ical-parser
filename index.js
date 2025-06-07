@@ -14,9 +14,31 @@ app.get('/', async (req, res) => {
 
    const parsed = events
   .filter(event => {
+    const summary = event.summary?.toLowerCase() || '';
+    const platform = url.toLowerCase();
+    
     const isRvshare = url.includes('rvshare');
-    const isCustomBlock = event.summary?.toLowerCase().includes('custom event');
-    return !(isRvshare && isCustomBlock);
+    const isCustomBlock = (() => {
+  const summary = event.summary?.toLowerCase() || '';
+  return ['custom event', 'blocked', 'not available', 'unavailable', 'blockout', 'calendar block', 'hold']
+    .some(keyword => summary.includes(keyword));
+})();
+
+    const isBlocked =
+    (platform.includes('airbnb') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+    (platform.includes('outdoorsy') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+    (platform.includes('rvezy') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+    (platform.includes('hipcamp') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+    (platform.includes('camplify') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+    (platform.includes('yescapa') && blockedKeywords.some(keyword => summary.includes(keyword)));
+   
+    return !(isCustomBlock) && !isBlocked;
+  })
+     
+  .map(event => {
+    let reservation_id = event.reservation_id || '';
+    let uid = event.uid || '';
+    const description = event.description || '';
 
   // Try to extract RVshare reservation ID from description
   const rvshareMatch = description.match(/reservations\/(\d+)/);

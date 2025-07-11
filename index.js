@@ -12,59 +12,60 @@ app.get('/', async (req, res) => {
     const data = await ical.async.fromURL(url);
     const events = Object.values(data).filter(e => e.type === 'VEVENT');
 
-   const parsed = events
-  .filter(event => {
-  const summary = event.summary?.toLowerCase() || '';
-  const platform = url.toLowerCase();
+    const parsed = events
+      .filter(event => {
+        const summary = event.summary?.toLowerCase() || '';
+        const platform = url.toLowerCase();
 
-  // Convert event.start safely to a Date
-  const eventStartDate = new Date(event.start);
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const eventYear = eventStartDate.getFullYear();
+        // Convert event.start safely to a Date
+        const eventStartDate = new Date(event.start);
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const eventYear = eventStartDate.getFullYear();
 
-  // Skip events from before the current year
-  const isOldYear = isNaN(eventStartDate) || eventYear < currentYear;
+        // Skip events from before the current year
+        const isOldYear = isNaN(eventStartDate) || eventYear < currentYear;
 
+        const blockedKeywords = ['custom event', 'blocked', 'not available', 'unavailable', 'blockout', 'calendar block', 'hold'];
 
-  const blockedKeywords = ['custom event', 'blocked', 'not available', 'unavailable', 'blockout', 'calendar block', 'hold'];
+        const isCustomBlock = blockedKeywords.some(keyword => summary.includes(keyword));
 
-  const isCustomBlock = blockedKeywords.some(keyword => summary.includes(keyword));
+        const isBlocked =
+          (platform.includes('airbnb') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('outdoorsy') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('rvezy') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('hipcamp') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('camplify') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('yescapa') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('harvesthosts') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('boondockers') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('pitchup') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
+          (platform.includes('safarinow') && blockedKeywords.some(keyword => summary.includes(keyword)));
 
-  const isBlocked =
-    (platform.includes('airbnb') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
-    (platform.includes('outdoorsy') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
-    (platform.includes('rvezy') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
-    (platform.includes('hipcamp') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
-    (platform.includes('camplify') && blockedKeywords.some(keyword => summary.includes(keyword))) ||
-    (platform.includes('yescapa') && blockedKeywords.some(keyword => summary.includes(keyword)));
+        return !isCustomBlock && !isBlocked && !isOldYear;
+      })
+      .map(event => {
+        let reservation_id = event.reservation_id || '';
+        let uid = event.uid || '';
+        const description = event.description || '';
 
-  return !isCustomBlock && !isBlocked && !isOldYear;
-  })
-     
-  .map(event => {
-    let reservation_id = event.reservation_id || '';
-    let uid = event.uid || '';
-    const description = event.description || '';
+        // Try to extract RVshare reservation ID from description
+        const rvshareMatch = description.match(/reservations\/(\d+)/);
+        if (rvshareMatch) {
+          reservation_id = rvshareMatch[1];
+          uid = rvshareMatch[1]; // optional override
+        }
 
-  // Try to extract RVshare reservation ID from description
-  const rvshareMatch = description.match(/reservations\/(\d+)/);
-  if (rvshareMatch) {
-    reservation_id = rvshareMatch[1];
-    uid = rvshareMatch[1]; // optional override
-  }
-
-  return {
-    summary: event.summary,
-    reservation_id,
-    start: event.start,
-    end: event.end,
-    uid,
-    location: event.location || '',
-    description
-  };
-});
-
+        return {
+          summary: event.summary,
+          reservation_id,
+          start: event.start,
+          end: event.end,
+          uid,
+          location: event.location || '',
+          description
+        };
+      });
 
     res.json(parsed);
   } catch (err) {
